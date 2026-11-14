@@ -89,21 +89,23 @@ class WaveEquationDAG:
     def get_node_info(self):
         return [(self.labels[n], self.colors[n].value) for n in self.graph.nodes]
 
-def visualize_graph(dag, output_path="wave_dag.png"):
-    pos = nx.spring_layout(dag.graph, seed=42)
-    colors = [dag.colors[n].value for n in dag.graph.nodes]
-    
-    # Маппинг цветов для отрисовки
-    color_map = {'observed': '#4C9AFF', 'latent': '#8ED18E', 'parameter': '#FFAB4C'}
-    node_colors = [color_map[c] for c in colors]
-    
-    plt.figure(figsize=(12, 8))
+def draw_dag(dag, ax, pos=None, node_size=2000, font_size=10):
+    if pos is None:
+        pos = nx.spring_layout(dag.graph, seed=42)
+    color_map = {NodeColor.OBSERVED: '#4C9AFF', NodeColor.LATENT: '#8ED18E',
+                 NodeColor.PARAMETER: '#FFAB4C', None: '#DBE0E5'}
+    node_colors = [color_map[dag.colors[n]] for n in dag.graph.nodes]
     nx.draw(dag.graph, pos, with_labels=True, labels=dag.labels, 
-            node_color=node_colors, node_size=2000, font_size=10, 
-            font_weight='bold', arrowsize=20)
-    plt.title("DAG волнового уравнения")
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
+            node_color=node_colors, node_size=node_size, font_size=font_size,
+            font_weight='bold', arrowsize=16, ax=ax)
+
+
+def visualize_graph(dag, output_path="wave_dag.png"):
+    fig, ax = plt.subplots(figsize=(12, 8))
+    draw_dag(dag, ax)
+    ax.set_title("DAG волнового уравнения")
+    fig.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
     print(f"Граф сохранен в {output_path}")
 
 if __name__ == "__main__":
