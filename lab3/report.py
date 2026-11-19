@@ -510,7 +510,7 @@ def proposal_variety(output):
     return '\n\n'.join(lines), examples
 
 
-def plot_trajectory(tokens, leaves=('u', 'u_t')):
+def plot_trajectory(tokens, leaves=('u', 'u_t'), *, counts=None):
     # Use the complete derivation to keep node positions fixed as the mask shrinks.
     complete = Derivation(leaves)
     for token in tokens:
@@ -535,8 +535,13 @@ def plot_trajectory(tokens, leaves=('u', 'u_t')):
 
     place(0, 0)
     positions = {node: (x / max(leaf_x - 1, 1), y) for node, (x, y) in positions.items()}
-    fig, panels = plt.subplots(1, 3, figsize=(11.4, 3.6), layout='constrained')
-    for ax, count in zip(panels, (0, min(3, len(tokens)-1), len(tokens)), strict=True):
+    width = 11.4 if counts is None else 3.2 * len(counts)
+    if counts is None:
+        counts = (0, min(3, len(tokens)-1), len(tokens))
+    if not counts or any(count < 0 or count > len(tokens) for count in counts):
+        raise ValueError('Reveal counts must lie between zero and the full derivation length.')
+    fig, panels = plt.subplots(1, len(counts), figsize=(width, 3.6), layout='constrained')
+    for ax, count in zip(np.atleast_1d(panels), counts, strict=True):
         dag = WaveEquationDAG()
         visible = list(range(count))
         if count == 0:
